@@ -20,7 +20,9 @@ You should also give a breakdown of the ranges of physical memory and their type
 
 You can find more on the osdev page (https://wiki.osdev.org/Detecting_Memory_%28x86%29) for the five types of memory reported using BIOS INT 0x15, EAX=0xE820. For each memory range you should output a line to the screen of the form:
 ```
-"Address range [xxxx : yyyy] status: zzzz" where xxxx is the start address, yyyy is the end address and zzzz is the type of the memory in that range.
+    "Address range [xxxx : yyyy] status: zzzz" 
+    where xxxx is the start address, 
+    yyyy is the end address and zzzz is the type of the memory in that range.
 ```
 
 ## Step 1: Building a Virtual Disk
@@ -33,6 +35,8 @@ The first step is to build a virtual disk for MemOS. To do this you should follo
 ```
 2. Usable RAM, reserved, ACPI reclaimable memory, ACPI NVS memory, or bad memory.
 ```
-"Address range [xxxx : yyyy] status: zzzz" where xxxx is the start address, yyyy is the end address and zzzz is the type of the memory in that range.
+    "Address range [xxxx : yyyy] status: zzzz" 
+    where xxxx is the start address, 
+    yyyy is the end address and zzzz is the type of the memory in that range.
 ```
 3. 
