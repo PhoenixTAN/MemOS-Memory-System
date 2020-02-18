@@ -28,6 +28,49 @@ You can find more on the osdev page (https://wiki.osdev.org/Detecting_Memory_%28
 ## Step 1: Building a Virtual Disk
 The first step is to build a virtual disk for MemOS. To do this you should follow the general guidelines (http://www.cs.bu.edu/fac/richwest/cs552_spring_2020/assignments/memos/BOCHS-disk-image-HOWTO) I provided for creating a simple disk image for use in BOCHS. If you do not have BOCHS, you can replace bximage with either dd or qemu-img. The latter requires you to have QEMU available.
 
+An example using dd instead of bximage to create a virtual disk file is as follows:
+
+```
+$dd if=/dev/zero of=disk.img bs=1k count=32760
+```
+
+Here, we simply use the pseudo-device /dev/zero to fill an output file, disk.img, with zero'd bytes, with a block size of 1024 and a count of blocks equal to 32760.   This will create a file whose size is 32760*1024 bytes. For larger or smaller files, you can choose different count values. Similarly, you can change the block size as it's not particularly important unless we're dealing with a real disk device.
+
+If you have qemu-img, you can create a raw disk image using the following command as an example:
+```
+$qemu-img create -f raw disk.img 32760K
+```
+
+In choosing the size of your virtual disk, you should be aware of disk geometries. In a real disk, at least older ones based on CHS geometries rather than logical block addressing (LBA), the size is calculated as:
+
+$$cylinders * heads * sectors * sector-size$$
+This is equivalent to:
+$$cylinders * (tracks / cylinder) * (sectors / track) * sector-size$$
+Let's assume that we're going to adopt the default sectors-per-track value for DOS compatibility. This is 63.
+Also, let's assume we have a complete geometry as follows:
+$$
+Cylinders = 65 \\
+Heads = 16 (same as tracks / cylinder) \\ 
+Sectors = 63  (actually, sectors / track) \\ 
+Sector-size = 512 bytes
+$$
+This gives us a disk size of:
+$$65 * 16 * 63 * 512 = 32760KB $$ 
+(where 1KB is 1024 bytes)
+
+Once we have a raw virtual disk partition file, we can start to properly configure its geometry and its filesystem. Then, we can install a bootloader.
+
+You should follow steps 2 onwards in the BOCHS HOWTO to create your formatted disk image. Step 5 is only required to install GRUB, which is not necessary for memos-1 (see below in the First Deliverable). You will, however need Step 5 to install GRUB for the purposes of memos-2 (the second deliverable).
+
+NOTE: if you use the geometry settings above (Cylinders=65, Heads=16, Sectors=63), make sure you use those in Step 2 of the BOCHS virtual disk HOWTO, and also later when using the GRUB shell.
+
+If installing GRUB, we will assume the bootloader is based on version 1 (GRUB legacy) rather than GRUB2. You will need to copy stage1, stage2, and e2fs_stage1_5 to a /boot/grub directory on your virtual disk, as described in the HOWTO step 5. Then you will need to install stage1 in the master boot record (MBR) region of your disk image, using the interactive grub shell. Once successfully installed, you are ready for Step 2...
+
+## Step 2: Writing the MemOS Code
+
+Here, you will have to write an x86 assembly program, called memos-X.s, where X is replaced with "1" or "2" depending on the version (described later). To help, I have provided a test program called **vga16.s**, written for use with the GNU assembler, gas. You should study vga16.s to see how it works. Intel's Software Developers Manual Volume 2 (https://software.intel.com/en-us/articles/intel-sdm) (Instruction Set) is helpful here.
+
+
 ## Requirements
 1. Displayed as a message, in the form.
 ```

@@ -1,5 +1,7 @@
 # Protected mode
 
+https://en.wikipedia.org/wiki/Protected_mode
+
 ## Definition
 Protected mode, also called **protected virtual address mode**, is an operational mode of x86-compatible central processing units (CPUs).
 
