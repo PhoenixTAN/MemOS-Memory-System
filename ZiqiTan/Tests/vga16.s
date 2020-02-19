@@ -21,7 +21,7 @@ _start:
 	movw $0x0003, %ax
 	int $0x10
 
-#sequencer	
+# sequencer	
 	movw $0x3c4, %dx
 	xorb %al, %al
 	movw $5, %cx
@@ -45,7 +45,7 @@ _start:
 	movw $0x07, %bx
 	int $0x10
 
-#attribute controller	
+# attribute controller	
 	movw $0x3c0, %dx
 	movb $0x10, %al
 	movw $4, %cx
@@ -76,7 +76,7 @@ _start:
 	movw $0x07, %bx
 	int $0x10
 
-#graphics register
+# graphics register
 	movw $0x3ce, %dx
 	xorb %al, %al
 	movw $9, %cx
@@ -100,7 +100,7 @@ _start:
 	movw $0x07, %bx
 	int $0x10
 
-#crt controller	
+# crt controller	
 	movw $0x3d4, %dx
 	xorb %al, %al
 	movw $25, %cx
@@ -124,7 +124,7 @@ _start:
 	movw $0x07, %bx
 	int $0x10
 
-#misc o/p register
+# misc o/p register
 	movw $0x3cc, %dx
 	inb %dx, %al
 
