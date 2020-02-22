@@ -94,7 +94,7 @@ $grub
 ```
 device (hd0) /path/to/disk.img
 root (hd0,0)
-setup (hd0t)
+setup (hd0)
 ```
 ![alt text](./image/Lab3/14.png)
 * test it out: 

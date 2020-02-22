@@ -34,14 +34,14 @@ An example using dd instead of bximage to create a virtual disk file is as follo
 $dd if=/dev/zero of=disk.img bs=1k count=32760
 ```
 
-Here, we simply use the pseudo-device /dev/zero to fill an output file, disk.img, with zero'd bytes, with a block size of 1024 and a count of blocks equal to 32760.   This will create a file whose size is 32760*1024 bytes. For larger or smaller files, you can choose different count values. Similarly, you can change the block size as it's not particularly important unless we're dealing with a real disk device.
+Here, we simply use the pseudo-device **/dev/zero** to fill an output file, **disk.img**, with zero'd bytes, with a block size of 1024 and a count of blocks equal to 32760.   This will create a file whose size is 32760*1024 bytes. For larger or smaller files, you can choose different count values. Similarly, you can change the block size as it's not particularly important unless we're dealing with a real disk device.
 
-If you have qemu-img, you can create a raw disk image using the following command as an example:
+If you have **qemu-img**, you can create a raw disk image using the following command as an example:
 ```
 $qemu-img create -f raw disk.img 32760K
 ```
 
-In choosing the size of your virtual disk, you should be aware of disk geometries. In a real disk, at least older ones based on CHS geometries rather than logical block addressing (LBA), the size is calculated as:
+In choosing the size of your virtual disk, you should be aware of **disk geometries**. In a real disk, at least older ones based on CHS geometries rather than logical block addressing (LBA), the size is calculated as:
 
 $$cylinders * heads * sectors * sector-size$$
 This is equivalent to:
@@ -58,17 +58,25 @@ This gives us a disk size of:
 $$65 * 16 * 63 * 512 = 32760KB $$ 
 (where 1KB is 1024 bytes)
 
-Once we have a raw virtual disk partition file, we can start to properly configure its geometry and its filesystem. Then, we can install a bootloader.
+Once we have a raw virtual disk partition file, we can start to properly configure its geometry and its filesystem. 
+### Then, we can install a bootloader.
 
-You should follow steps 2 onwards in the BOCHS HOWTO to create your formatted disk image. Step 5 is only required to install GRUB, which is not necessary for memos-1 (see below in the First Deliverable). You will, however need Step 5 to install GRUB for the purposes of memos-2 (the second deliverable).
+You should follow steps 2 onwards in the **BOCHS** HOWTO to create your formatted disk image. Step 5 is only required to install **GRUB**, which is not necessary for memos-1 (see below in the First Deliverable). You will, however need Step 5 to install **GRUB** for the purposes of memos-2 (the second deliverable).
 
-NOTE: if you use the geometry settings above (Cylinders=65, Heads=16, Sectors=63), make sure you use those in Step 2 of the BOCHS virtual disk HOWTO, and also later when using the GRUB shell.
+NOTE: if you use the geometry settings above (Cylinders=65, Heads=16, Sectors=63), make sure you use those in Step 2 of the BOCHS virtual disk HOWTO, and also later when using the **GRUB** shell.
 
-If installing GRUB, we will assume the bootloader is based on version 1 (GRUB legacy) rather than GRUB2. You will need to copy stage1, stage2, and e2fs_stage1_5 to a /boot/grub directory on your virtual disk, as described in the HOWTO step 5. Then you will need to install stage1 in the master boot record (MBR) region of your disk image, using the interactive grub shell. Once successfully installed, you are ready for Step 2...
+If installing **GRUB**, we will assume the bootloader is based on version 1 (GRUB legacy) rather than GRUB2. You will need to copy **stage1**, **stage2**, and **e2fs_stage1_5** to a **/boot/grub** directory on your virtual disk, as described in the HOWTO step 5. Then you will need to install stage1 in the **master boot record (MBR)** region of your disk image, using the interactive grub shell. Once successfully installed, you are ready for Step 2...
 
 ## Step 2: Writing the MemOS Code
 
-Here, you will have to write an x86 assembly program, called memos-X.s, where X is replaced with "1" or "2" depending on the version (described later). To help, I have provided a test program called **vga16.s**, written for use with the GNU assembler, gas. You should study vga16.s to see how it works. Intel's Software Developers Manual Volume 2 (https://software.intel.com/en-us/articles/intel-sdm) (Instruction Set) is helpful here.
+Here, you will have to write an x86 assembly program, called **memos-X.s**, where X is replaced with "1" or "2" depending on the version (described later). To help, I have provided a test program called **vga16.s**, written for use with the GNU assembler, gas. You should study vga16.s to see how it works. **Intel's Software Developers Manual Volume 2** (https://software.intel.com/en-us/articles/intel-sdm) (Instruction Set) is helpful here.
+
+Notice **how the size of vga16.s is limited to 512 bytes**. It's actually possible to load this code, after assembly and linkage into the MBR of your disk partition and treat it as a bootable program. This is because it has **a valid boot signature 0xAA55 in the last two bytes of the 512 byte sector**.
+
+### Assemble and link your memos-X.s program
+To assemble and link your memos-X.s program, you will need to follow the instructions at the bottom of vga16.s as a guideline. 
+
+What is missing is the **linker script** to complete the linkage of your program. Here, I provide the linker script for vga16.s. You should read the info or man pages on GNU **ld**, which is part of the **binutils package**, to understand the format of linker scripts. Notice how, at the bottom of vga16.s we use dd again, to create a sector image of 512 bytes that will fit in an MBR if desired. Here, we **skip the first 4096 bytes to bypass the object file program header, generated by ld**. This is because the assembler (as) and linker (ld) produce an output file in ELF binary format and what we really want are just the program sections if we're to map this code into an MBR.
 
 
 ## Requirements
