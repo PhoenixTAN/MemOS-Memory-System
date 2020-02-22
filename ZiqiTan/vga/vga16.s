@@ -8,7 +8,7 @@
 # video driver for the Quest OS, to support Pacman.
 # If it can't play Pacman it's not a proper OS!	
  
-	.globl _start
+	.global _start
 	
 	.code16
 
@@ -168,4 +168,3 @@ print:	pushw %dx
 # ld -T vga.ld vga16.o -o vga16
 # dd bs=1 if=vga16 of=vga16_test skip=4096 count=512
 # bochs -qf bochsrc-vga
-	
