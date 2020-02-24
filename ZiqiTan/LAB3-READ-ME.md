@@ -8,6 +8,7 @@ Tasks for today:
 * Disk = An array of sectors
 * Disk size = number of sectors * size of sector (512 bytes)
 
+To view disk partition: 
 ```
 $ sudo fdisk -l /dev/sda
 ```
@@ -15,10 +16,18 @@ $ sudo fdisk -l /dev/sda
 * virtual disk = a piece of the real disk
 * So how to create a virtual disk?
 ### Step 1: Use echo to create a virtual disk, mydisk.img
+Create a file called disk.img with size of 1kB*32760, filled with null character.
 ```
 dd if=/dev/zero of=disk.img bs=1k count=32760
 ```
+where **bs** is the block size.
+
+**dd** is a command-line utility, the primary purpose of which is to **convert and copy files**.
+
 ![alt text](./image/Lab3/01.png)
+
+#### What is /dev/zero?
+/dev/zero is a special file in Unix-like operating systems that **provides as many null characters (ASCII NUL, 0x00) as are read from it**. One of the typical uses is to **provide a character stream for initializing data storage**.
 
 * I wrote something into the disk? Next time, how am I gonna find the thing I wrote?
 * Need some place to store the bookkeeping data
@@ -32,6 +41,7 @@ $ sudo fdisk -l /dev/sda
 ```
 hexdump mydisk.img
 ```
+A hex dump is a hexadecimal view (on screen or paper) of computer data, from RAM or from a computer file or storage device.
 * Now give mydisk.img some partitions: 
 ```
 fdisk mydisk.img
@@ -89,6 +99,10 @@ mkdir -p boot/grub
 ![alt text](./image/Lab3/13.png)
 * copy over files /boot/grub
 ```
+$ cp /boot/grub/stage* ./boot/grub/
+$ cp /boot/grub/e2fs_stage1_5 ./boot/grub/
+```
+```
 $grub
 ```
 ```
@@ -113,7 +127,7 @@ cd /root/vnc/opt/TigerVNC/bin/
 ***
 
 
-## Lab
+## A HelloWorld Assembly Code
 
 What is a partition?
 
