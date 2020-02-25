@@ -7,10 +7,10 @@ DEADLINE March 1st, 11:59PM (HARD DEADLINE, NO EXTENSIONS)
 **This project can be performed in groups of up to TWO people.**
  If working in a group of two, only one person is required to submit a solution, but it must be submitted by the deadline (posted on the class syllabus page) for you to receive a grade. In a **README file**, please include the name of the other person.
 
- ## Background
- In this assignment, you are going to write a very simple OS. Okay, it's not a particularly useful OS but it will provide a way to understand **how systems are booted, and how system information is displayed on the screen**. The idea is to bootstrap a program that **probes the system BIOS and reports the amount of physical memory available in your machine**.
+## Background
+In this assignment, you are going to write a very simple OS. Okay, it's not a particularly useful OS but it will provide a way to understand **how systems are booted, and how system information is displayed on the screen**. The idea is to bootstrap a program that **probes the system BIOS and reports the amount of physical memory available in your machine**.
 
- This is then displayed as a message, in the form:
+This is then displayed as a message, in the form:
 ```
     "MemOS: Welcome *** System Memory is: XXXMB"
 ```

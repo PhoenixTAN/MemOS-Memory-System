@@ -105,7 +105,7 @@ $ cp /boot/grub/stage* ./boot/grub/
 $ cp /boot/grub/e2fs_stage1_5 ./boot/grub/
 ```
 ```
-$grub
+$ grub
 ```
 ```
 device (hd0) /path/to/disk.img
@@ -129,17 +129,8 @@ cd /root/vnc/opt/TigerVNC/bin/
 ***
 
 
-## A HelloWorld Assembly Code
-
-What is a partition?
-
 ```
 losetup -o 32256 /dev/loop0 disk.img
 ```
 Where do we get 32256 the first cylinder? 
 
-What is loop0?
-
-hd0: hard disk 0
-
-Install grub...
