@@ -7,15 +7,20 @@
 # Originally developed as a bootup routine to reverse-engineer a VGA-based
 # video driver for the Quest OS, to support Pacman.
 # If it can't play Pacman it's not a proper OS!	
- 
-	.global _start
-	
-	.code16
 
+# All assembler directives have names that begin with a period (`.'). 
+# The rest of the name is letters, usually in lower case.
+
+.text	# Tells as to assemble the following statements onto the end of the text subsection numbered subsection, which is an absolute expression.
+	.global _start	# start entry
+	
+	.code16		# code will be run in 16-bit mode.
+
+# start 
 _start:
-	movw $0x9000, %ax
-	movw %ax, %ss
-	xorw %sp, %sp
+	movw $0x9000, %ax	# ax, bx, cx and dx are general purpose registers
+	movw %ax, %ss	# initialize the stack segment
+	xorw %sp, %sp	# clear the stack pointer
 
 # set video mode	
 	movw $0x0003, %ax
