@@ -11,4 +11,3 @@ After doing all these steps, we are able to see the message like this:
 MemOS: Welcome *** System Memory is: 16 MB
 Address range [xxxx : yyyy] status: zzzz
 …(several lines)
-

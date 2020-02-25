@@ -66,6 +66,8 @@ fdisk mydisk.img
 ```
 mkfs.ext2 mydisk.img
 ```
+Create an actual filesystem on the partition in the disk image (NOTE: here, we'll create an ext2 native Linux file system using mke2fs).
+
 ![alt text](./image/Lab3/10.png)
 ![alt text](./image/Lab3/11.png)
 * Only partition has file system: verifiy it by 
