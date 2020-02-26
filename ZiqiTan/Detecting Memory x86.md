@@ -12,3 +12,15 @@ It is perfectly reasonable to say to yourself, "How does the BIOS detect RAM? I'
 All of this depends on chipset specific methods, and is usually documented in the datasheets for the memory controller (northbridge). **The RAM is unusable for running programs during this process**. The BIOS initially is running from ROM, so it can play the necessary games with the RAM chips. But it is completely impossible to do this from inside any other program.
 
 It is also reasonable to wish to reclaim the memory from 0xA0000 to 0xFFFFF and make your RAM contiguous. Again the answer is disappointing:
+
+
+## Detecting Upper Memory
+## BIOS Function: INT 0x15, EAX = 0xE820
+
+By far **the best way** to detect the memory of a PC is by using the INT 0x15, EAX = 0xE820 command. 
+
+It is the only BIOS function that can detect memory areas above 4G. It is meant to be the ultimate memory detection BIOS function.
+
+In reality, **this function returns an unsorted list** that may contain unused entries and (in rare/dodgy cases) may return overlapping areas. Each list entry is **stored in memory at ES:DI, and DI is not incremented** for you.
+
+

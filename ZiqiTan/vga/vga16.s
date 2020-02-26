@@ -11,7 +11,7 @@
 # All assembler directives have names that begin with a period (`.'). 
 # The rest of the name is letters, usually in lower case.
 
-.text	# Tells as to assemble the following statements onto the end of the text subsection numbered subsection, which is an absolute expression.
+.text	
 	.global _start	# start entry
 	
 	.code16		# code will be run in 16-bit mode.
@@ -19,17 +19,23 @@
 # start 
 _start:
 	movw $0x9000, %ax	# ax, bx, cx and dx are general purpose registers
+	# we cannot set up the ss register directly
 	movw %ax, %ss	# initialize the stack segment
 	xorw %sp, %sp	# clear the stack pointer
 
-# set video mode	
+# set video mode
 	movw $0x0003, %ax
-	int $0x10
+	int $0x10	# BIOS interrupts call
+	# INT 10
+	# Function: Set video mode
+	# Function code: AH=00H
+	# Parameters: AL = video mode, in this scenario AL=03H
+	# Return: AL = video mode flag / CRT controller mode byte.
 
 # sequencer	
-	movw $0x3c4, %dx
-	xorb %al, %al
-	movw $5, %cx
+	movw $0x3c4, %dx	# 
+	xorb %al, %al	# clear al
+	movw $5, %cx	# set up the loop times for 5
 1:	
 	outb %al, %dx
 	incw %dx
@@ -41,7 +47,7 @@ _start:
 	
 	popw %ax
 	incb %al
-	loop 1b
+	loop 1b		# go backward for code segment 1
 
 	movw $0x0e0d, %ax
 	movw $0x07, %bx
@@ -135,16 +141,22 @@ _start:
 
 	call print
 
-1:	jmp 1b
-	
-print:	pushw %dx
-	movb %al, %dl
-	shrb $4, %al
-	cmpb $10, %al
-	jge 1f
+1:	jmp 1b		# 
+
+# print function
+# Function: print Hex from dec.
+# eg: 10(d) = 0x0a, then we should add 55 to get the ascii code of 'a'
+print:	
+	pushw %dx		# save dx
+	movb %al, %dl	# save al in dl
+	shrb $4, %al	# shift right for 4 bits
+	cmpb $10, %al	# compare 10 with al
+	jge 1f			# if 10 >= %al, then jump foward to segment 1
 	addb $0x30, %al
 	jmp 2f
-1:	addb $55, %al		
+1:	addb $55, %al	
+	
+	# call BIOS interrupt	
 2:	movb $0x0E, %ah
 	movw $0x07, %bx
 	int $0x10
@@ -155,12 +167,14 @@ print:	pushw %dx
 	jge 1f
 	addb $0x30, %al
 	jmp 2f
-1:	addb $55, %al		
+1:	addb $55, %al
+
+	# call BIOS interrupt		
 2:	movb $0x0E, %ah
 	movw $0x07, %bx
 	int $0x10
-	popw %dx
-	ret
+	popw %dx		# restore dx
+	ret				# return
 
 # This is going to be in our MBR for Bochs, so we need a valid signature
 	.org 0x1FE

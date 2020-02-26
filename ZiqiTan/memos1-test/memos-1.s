@@ -1,7 +1,8 @@
-.text
-	.global _start
-	.code16
+.text 	# Tells as to assemble the following statements onto the end of the text subsection numbered subsection, which is an absolute expression.
+	.global _start 		# start entry
+	.code16		# code will be run in 16-bit mode.
 
+# start entry
 _start:
 # -----------------------------------------------------------------------
 	.set 	segment_address, 	0x07c0
