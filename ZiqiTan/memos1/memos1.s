@@ -29,6 +29,8 @@ _start:
 
     call print_Welcome
 	call print_line
+	call getAddressMap
+	call printAddressMap
     jmp .
 # -------------------------------------------------------------------------
 
@@ -49,13 +51,6 @@ print_Welcome:
     
 	ret
 
-    welcome_string: 	  .ascii "MemOS 1: Welcome *** System Memory is: 0x"
-    # .ascii expects zero or more string literals separated by commas. 
-    # It assembles each string (with no automatic trailing zero byte) into consecutive addresses.
-
-    welcome_string_len: 	  .word  . - welcome_string    # . is the current address
-    memory_unit: .ascii " MB  "
-    len_memory_unit: .word	 . - memory_unit
 
 # -----------------------------------------------------------------------
 print_string:
@@ -113,13 +108,13 @@ get_memory_size:
 	cmpb 	$0x80, %AH
 	je		E801_ERROR			# if E801 does not work, return ;
 
-    addw 	$0x400, %ax			# ax add 1MB
-	shll 	$6, %ebx	  		# bx times 64
-	addl 	%EAX, %ebx			# ax + bx
-	shrl 	$10, %ebx			# convert KB to MB
+    addw 	$0x400, %AX			# ax add 1MB
+	shll 	$6, %EBX	  		# bx times 64
+	addl 	%EAX, %EBX			# ax + bx
+	shrl 	$10, %EBX			# convert KB to MB
 	
-	movl 	$memory_size, %esi	# put the address of memory_size in SI
-	movl	%ebx, (%esi) 		# put the answer to memory_size
+	movl 	$memory_size, %ESI	# put the address of memory_size in SI
+	movl	%EBX, (%ESI) 		# put the answer to memory_size
 								# () means that we use SI as an address
 	
 	call 	print_2_word 			# print the data in address of memory_size
@@ -132,7 +127,6 @@ memory_size: .word 0
 			 .word 0
 
 # ---------------------------------------------------------------------
-
 
 # -----------------------------------------------------------------------
 # Function: print 32-bit binary number in hexadecimal form.
@@ -155,7 +149,6 @@ do_print_32:
 	addl	$5, %esi
 	popl 	%ecx				# retrive CX
 	ret
-
 
 # -------------------------------------------------------------------------
 print_hex_digit:
@@ -181,11 +174,152 @@ do_print_hex:
 
 	ret
 
-
 # -----------------------------------------------------------
-print_heximal:
+	.set	MMARD_SIZE, 20			#memory map address range descriptor size
+	.set 	magic_number, 0x534d4150
+# eax for counter, es:si for buffer
+getAddressMap:
+	pushl	%ebp
+	pushl	%esp
+
+	# TODO: For the first call to the function, point ES:DI at the destination buffer for the list.
+	xorl	%EBX, %EBX 			# clear EBX
+	movl	$MMARD_SIZE, %ECX 	# set ECX to 24
+	movl	$magic_number, %EDX 	# magic number
+								
+	movl	$buffer, %edi 		# edi for return buffer
+	xorw	%BP, %BP 			# BP keeps an entry count
+
+	# Use INT 15, AX = E820 to get memory map
+	movl	$0xE820, %EAX 		
+	int 	$0x15
+
+	# If the first call to the function is successful,
+	# EAX will be set to magic_number,
+	# and the carry flag will be clear.	
+
+	jc		E802_ERR					# jump if CF = 1
+	cmpl	$magic_number, %EAX 	
+	jne 	E802_ERR					# jump if not equal (ZF=0)
+
+E802_next_call:
+	# EBX will be set to some non-zero value, 
+	# which must be preserved for the next call to the function.
+	test	%EBX, %EBX 			# ebx & ebx == 0
+	je 		E802_END 				# jump if equal (ZF=1)
+	
+	# For the subsequent calls to the function: 
+	# increment DI by your list entry size, 
+	# reset EAX to 0xE820, and ECX to 24.
+	# When you reach the end of the list, EBX may reset to 0.
+
+	incw	%BP				 	# increment entry count
+	addl	$MMARD_SIZE, %EDI 	# increase return address
+
+	movl	$0xe820, %EAX 		# reset EAX to 0xE820
+	movl	$MMARD_SIZE, %ECX 	
+	int 	$0x15 				# next call
+	jmp 	E802_next_call		# loop until ebx = 0
+
+E802_END:
+	xorl	%eax, %eax 			# reset
+ 	movw 	%bp, %ax 			# copy counter to ax
+ 	movl 	$buffer, %esi 		# copy address to esi
+ 	clc 						# clear CF
+ 	popl 	%esp
+ 	popl 	%ebp
+E802_ERR:
+ 	ret
+
+# -----------------------------------------------------------------------
+# es:si for begin address, eax for count
+printAddressMap:
+	pushl 	%esi
+
+entry_loop:
+	pushl	%EAX				# save counter
+
+	# print 'Memory Range ['
+	pushl	%ESI		
+	leaw 	memory_range_string, %SI
+	movw 	len_memory_range_string, %CX
+	call 	print_string		
+	popl	%ESI
+	
+	movb 	$0x03, %ah 			# int10 0x3 read cursor position
+	movb 	$0x00, %bh
+	int 	$0x10
+
+	call 	print_2_word 			# print base address
+
+	# print ':'
+	movb $':', %AL
+	movb $0x0e, %AH
+	int $0x10 					# int10 0xe print ':'
+
+	addl	$16, %esi 			# move to the base address of the next entry 
+	call 	print_2_word 			# print end address
+	
+	pushl	%esi
+	leaw 	str_type, %SI
+	movw 	len_type, %CX
+	call 	print_string 		# print '] State:'
+	popl	%esi
+
+	subl	$8, %esi 			# move back to the type of current entry
+	movl	(%esi), %eax 		# read the type into eax
+
+	pushl	%esi
+	cmp 	$0x02, %eax 		# compare to 2
+	je 		state2
+	leaw 	str_state1, %SI
+	movw 	state1_len, %CX
+	jmp 	state_con
+
+state2: 
+	leaw 	str_state2, %SI
+	movw 	state2_len, %CX
+
+state_con:
+	call 	print_string 		# print the type
+	popl	%esi
+
+	addl	$4, %esi 			# move to the begining of the next entry
+
+	call 	print_line 			
+
+	popl	%eax
+	decl 	%eax
+	cmpl 	$0, %eax 			# loop counter compare to 0
+	jge		entry_loop
+
+	popl	%esi
 
 	ret
+# -------------------------------------------------------------------------
+
+# Constant strings
+# --------------------------------------------------------------------------------------
+welcome_string: 	  .ascii "MemOS 1: Welcome *** System Memory is: 0x"
+	# .ascii expects zero or more string literals separated by commas. 
+	# It assembles each string (with no automatic trailing zero byte) into consecutive addresses.
+welcome_string_len: 	  .word  . - welcome_string    
+	# . is the current address
+
+memory_unit: .ascii " MB  "
+len_memory_unit: .word	 . - memory_unit
+
+memory_range_string: 	.ascii	"Memory Range ["
+len_memory_range_string: 	.word  	. - memory_range_string
+
+str_type: 	.ascii 	"] Type: "
+len_type: 	.word  	. - str_type
+
+str_state1:	.ascii	"Free Memory"
+state1_len:	.word	. - str_state1
+
+str_state2:	.ascii	"Reserved Memory"
+state2_len: .word	. - str_state2
 
 # This is going to be in our MBR for Bochs.
 # -------------------------------------------------------
@@ -197,5 +331,8 @@ print_heximal:
 	.byte 0xAA
 
 # ------------------------------------------------------
+# This 
 
-
+buffer:
+	.fill 	20 * MMARD_SIZE, 1 
+	.set	buffer_len, . - buffer
