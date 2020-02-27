@@ -64,7 +64,7 @@ Base Address       | Length             | Type
 - Do an INT 0x15.
 - If the first call to the function is successful, EAX will be set to 0x534D4150, and the Carry flag will be clear. 
 - EBX will be set to some non-zero value, which must be preserved for the next call to the function. 
-- CL will contain the number of bytes actually stored at ES:DI (probably 20).
+- CL (CX_low) will contain the number of bytes actually stored at ES:DI (probably 20).
 - For the subsequent calls to the function: increment DI by your list entry size, reset EAX to 0xE820, and ECX to 24. 
 - When you reach the end of the list, EBX may reset to 0. 
 - If you call the function again with EBX = 0, the list will start over. 

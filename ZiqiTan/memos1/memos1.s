@@ -29,8 +29,8 @@ _start:
 
     call print_Welcome
 	call print_line
-	call getAddressMap
-	call printAddressMap
+	call get_memory_map
+	call print_memory_map
     jmp .
 # -------------------------------------------------------------------------
 
@@ -175,21 +175,21 @@ do_print_hex:
 	ret
 
 # -----------------------------------------------------------
-	.set	MMARD_SIZE, 20			#memory map address range descriptor size
+	.set	MMARD_SIZE, 20			# memory map address range descriptor size
 	.set 	magic_number, 0x534d4150
 # eax for counter, es:si for buffer
-getAddressMap:
+get_memory_map:
 	pushl	%ebp
 	pushl	%esp
 
 	# TODO: For the first call to the function, point ES:DI at the destination buffer for the list.
-	xorl	%EBX, %EBX 			# clear EBX
-	movl	$MMARD_SIZE, %ECX 	# set ECX to 24
+	xorl	%EBX, %EBX 				# clear EBX
+	xorw	%BP, %BP 			# BP keeps an entry count
+	movl	$MMARD_SIZE, %ECX 		# set ECX to 24
 	movl	$magic_number, %EDX 	# magic number
 								
-	movl	$buffer, %edi 		# edi for return buffer
-	xorw	%BP, %BP 			# BP keeps an entry count
-
+	movl	$buffer, %edi 		# EDI for return buffer
+	
 	# Use INT 15, AX = E820 to get memory map
 	movl	$0xE820, %EAX 		
 	int 	$0x15
@@ -233,7 +233,7 @@ E802_ERR:
 
 # -----------------------------------------------------------------------
 # es:si for begin address, eax for count
-printAddressMap:
+print_memory_map:
 	pushl 	%esi
 
 entry_loop:
@@ -245,7 +245,7 @@ entry_loop:
 	movw 	len_memory_range_string, %CX
 	call 	print_string		
 	popl	%ESI
-	
+
 	movb 	$0x03, %ah 			# int10 0x3 read cursor position
 	movb 	$0x00, %bh
 	int 	$0x10
