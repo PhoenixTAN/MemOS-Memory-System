@@ -7,10 +7,8 @@
 .text	        # .text section
 .global _start	# start entry
 .code16		    # code will be run in 16-bit mode.
-
 # -----------------------------------------------------------------------------------
 _start:
-
 	# When the BIOS finds such a boot sector, 
     # it is loaded into memory at 0x0000:0x7c00 (segment 0, address 0x7c00);
     # some BIOS' load to **0x7c0:0x0000** (segment 0x07c0, offset 0).
@@ -29,19 +27,16 @@ _start:
 
 	# print memory map
 	call 	get_memory_map
-	# call 	print_memory_map
+
+	jmp .	# dead loop
 
 	# Constant strings
 	msg_welcome: 	  .ascii 	"MemOS 1: Welcome *** System Memory (in MB) is : 0x"
 	len_welcome: 	  .word  	. - msg_welcome
-	
-	# dead loop
-	jmp .
 # -----------------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------------------
-get_memory_size:
-    
+get_memory_size:  
 	pushw 	%AX					# protect AX
 	# BIOS interrupt
     movw    $0xE801, %AX
@@ -52,7 +47,6 @@ get_memory_size:
 
 	cmpb    $0x86, %AH
 	je 		E801_END			# if E801 does not work, return ;
-
 	cmpb 	$0x80, %AH
 	je		E801_END			# if E801 does not work, return ;
 
@@ -92,9 +86,7 @@ E802_next_call:
 	# EBX will be set to some non-zero value, 
 	# which must be preserved for the next call to the function.
 	# When you reach the end of the list, EBX may reset to 0.
-
 	call 	print_memory_map_entry
-
 	test 	%EBX, %EBX			# EBX & EBX == 0
 	je 		E802_END			# jump if equal (ZF=1)
 
@@ -121,7 +113,7 @@ E802_END:
 # 			Type 1: Usable RAM
 # 			Type 2: Reserved
 print_memory_map_entry:
-	pushl 	%EAX			# protect AX
+	pushl 	%EAX			# protect AX, EX, DI
 	pushl	%ECX
 	pushl 	%EDI
 
@@ -135,9 +127,9 @@ print_memory_map_entry:
 	call 	print_32
 
 	# print '~'
-	movb $'~', %al
-	movb $0x0E, %ah
-	int $0x10
+	movb 	$'~', %AL
+	movb 	$0x0E, %AH
+	int 	$0x10
 
 	# print length
 	movl	(%EDI), %EAX		# base address in EAX
@@ -151,33 +143,31 @@ print_memory_map_entry:
 	movl	(%EDI), %EAX
 	cmpl 	$0x0002, %EAX
 	je		print_reserved_type
-	# call 	print_32
-	leaw 	free_type, %si
-	movw 	len_free_type, %cx
+
+	leaw 	free_type, %SI
+	movw 	len_free_type, %CX
 	jmp		print_end
 print_reserved_type:
-	leaw 	reserved_type, %si
-	movw 	len_reserved_type, %cx
-
+	leaw 	reserved_type, %SI
+	movw 	len_reserved_type, %CX
 print_end:
 	call 	print_mesg
-	call 	print_line
-	
+	call 	print_line	
 	popl 	%EDI
 	popl	%ECX
-	popl	%EAX				# protect AX
-
+	popl	%EAX				# protect AX, CX, DI
 	ret
-
+	
+	# Constant string:
 	str_addr_range:	  		.ascii 		"Address range: ["
 	len_str_addr_range: 	.word 		. - str_addr_range
 	free_type: 	  			.ascii 		"] -> Free Memory (1)"
 	len_free_type: 	  		.word  		. - free_type
 	reserved_type: 	  		.ascii 		"] -> Reserved Memory (2)"
 	len_reserved_type: 		.word  		. - reserved_type
-# ----------------------------------------------------------
+# -----------------------------------------------------------------
 
-# ---------------------------------------------------------
+# --------------------------------------------------------------
 # function: print a string in (%DS:SI).
 print_mesg:
 	pushw 	%AX			# protect AX
@@ -190,9 +180,7 @@ print_AL:
         				# Function code: AH = 0E H
         				# Parameters: AL = Character, BH = Page Number, BL = Color   	
 	loop 	print_AL
-
 	popw 	%AX			# retrieve AX
-
 	ret
 # ----------------------------------------------------------------------------------------
 
@@ -231,12 +219,12 @@ print:
 	ret
 # ----------------------------------------------------------
 print_16:
-	pushl %EAX
-	shr $8, %AX	
-	call print			# print EAX[15..8]
+	pushl 	%EAX
+	shr 	$8, %AX	
+	call 	print			# print EAX[15..8]
 
-	popl %EAX
-	call print			# print AX[7..0]
+	popl 	%EAX
+	call 	print			# print AX[7..0]
 	ret
 # ----------------------------------------------------------
 print_32:
@@ -259,10 +247,10 @@ print_line:
 
 # -----------------------------------------------------------
 # set up bootable signature
-	.org 0x1FE		# 510 bytes
-	.byte 0x55
-	.byte 0xAA
+	.org 	0x1FE		# 510 bytes
+	.byte 	0x55
+	.byte 	0xAA
 # -------------------------------------------------------------
 # 					repeat, size bytes, value
 buffer:		.fill 		1 * 20, 0
-
+#----------------------------------------------------------
