@@ -206,7 +206,7 @@ E802_next_call:
 	# EBX will be set to some non-zero value, 
 	# which must be preserved for the next call to the function.
 	test	%EBX, %EBX 			# ebx & ebx == 0
-	je 		E802_END 				# jump if equal (ZF=1)
+	je 		E802_END 			# jump if equal (ZF=1)
 	
 	# For the subsequent calls to the function: 
 	# increment DI by your list entry size, 

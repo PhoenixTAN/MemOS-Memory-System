@@ -24,7 +24,7 @@ It is the only BIOS function that can detect memory areas above 4G. It is meant 
 In reality, **this function returns an unsorted list** that may contain unused entries and (in rare/dodgy cases) may return overlapping areas. Each list entry is **stored in memory at ES:DI, and DI is not incremented** for you.
 
 The format of an entry is 2 uint64_t's and a uint32_t in the 20 byte version, plus one additional uint32_t in the 24 byte ACPI 3.0 version (but nobody has ever seen a 24 byte one). It is probably best to always store the list entries as 24 byte quantities -- to preserve uint64_t alignments, if nothing else. (Make sure to set that last uint64_t to 1 before each call, to make your map compatible with ACPI).
-
+#### Data structure
 - First uint64_t = Base address
 - Second uint64_t = Length of "region" (if this value is 0, ignore the entry)
 - Next uint32_t = Region "type"

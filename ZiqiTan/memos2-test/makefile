@@ -10,7 +10,7 @@ boot.o:
 	gcc -c boot.s -o boot.o
 
 install: memos-2
-	cp memos-2 /mnt/boot
+	cp memos-2 /root/mydisk/boot
 
 clean:
 	-rm *.o memos-2

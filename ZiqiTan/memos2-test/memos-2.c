@@ -101,11 +101,14 @@ void init(multiboot_info_t* pmb) {
 
     // // state
     printStr("] State: ");
-    if(mmap->type == 1) {
+    if( mmap->type == 1 ) {
       printStr("available");
     }
-    else {
+    else if( mmap->type ==2 ){
       printStr("reserved");
+    }
+    else {
+      printStr("Others");
     }
     
     // row increase, set column to 0
