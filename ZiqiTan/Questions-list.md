@@ -1,0 +1,1 @@
+What is check sum in boot.s ?
