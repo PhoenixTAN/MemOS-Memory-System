@@ -1,25 +1,41 @@
+# ----------------------------------------------------------------------------------------
+# Ziqi Tan, Jiaqian Sun
+# Reference: 
+#       https://www.gnu.org/software/grub/manual/multiboot/multiboot.html#multiboot_002eh
+# 
+# ------------------------------------------------------------------------------------------
+.text
 .global _start	
 .global stack
-    .bss
-    .align 0x1000
-    .comm stack, 0x1000
-    .data
-    .text
 
 _start:
-    jmp real_start
+    jmp boot_entry
     
     # Multiboot header -- Must be in 1st page for GRUB
     .align 4
-    .long 0x1BADB002    # Multiboot magic number
-    .long 0x00000003    # Align modules to 4KB, req. mem size
-    .long 0xE4524FFB    # Checksum
 
-real_start:
-    movl $stack+0x1000, %ESP
+    .long 0x1BADB002    # Multiboot magic number
+    
+    /* MULTIBOOT_HEADER_MAGIC */
+    .long 0x00000003    # Align modules to 4KB, req. mem size
+    
+    /* checksum */
+    .long 0xE4524FFB    # -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
+
+boot_entry:
+    /* Initialize the stack pointer. */
+    movl $(stack+0x4000), %ESP
+
+    /* Push the pointer to the Multiboot information structure. */
     pushl %EBX
 
-    call init
-    
+    /* Push the magic value. */
+    pushl   %EAX
+
+    /* Now enter the C main function... */
+    call cmain
+     
     hlt     # halts CPU until the next external interrupt is fired
 
+/* Our stack area. */
+    .comm stack, 0x4000

@@ -1,131 +1,172 @@
+/**
+ * Author: Ziqi Tan, Jiaqian Sun
+ * 
+ * Reference: 
+*/
+
 #include <multiboot.h>
 
-// data type
-typedef unsigned short unit_16;
-typedef unsigned long unit_32;
+/* Macros. */
 
-// position to print char
-unit_16 x = 0;
-unit_16 y = 0;
+/* Check if the bit BIT in FLAGS is set. */
+#define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
 
-// get the string length
-unit_16 strlen(char* str) {
-  unit_16 count;
-  for (count = 0; str[count] != '\0'; count++);
-  return count;
+/* Some screen stuff. */
+/* The number of columns. */
+#define COLUMNS                 80
+/* The number of lines. */
+#define LINES                   24
+/* The attribute of an character. */
+#define ATTRIBUTE               7
+/* The video memory address. */
+#define VIDEO                   0xB8000
+
+/* Variables. */
+/* Save the X position (column). */
+static int xpos;
+/* Save the Y position (row). */
+static int ypos;
+/* Point to the video memory. */
+static volatile unsigned char *video;
+
+/* Forward declarations. */
+void cmain (unsigned long magic, unsigned long addr);
+static void cls (void);
+void print_memory_size(multiboot_uint64_t memory_size);
+void print_memory_range(multiboot_uint64_t base_addr, multiboot_uint64_t len, multiboot_uint32_t type );
+void print_hex_string(multiboot_uint64_t data);
+void put_char(char ch);
+void put_string(char* string);
+void newline(void);
+
+// void cmain(multiboot_info_t* pmb) {
+void cmain(unsigned long magic, unsigned long addr) {
+    /* Clear the screen. */
+    cls ();
+
+    multiboot_info_t *mbi;
+
+    /* Am I booted by a Multiboot-compliant boot loader? */
+    if (magic != MULTIBOOT_BOOTLOADER_MAGIC) {
+        // printf ("Invalid magic number: 0x%x\n", (unsigned) magic);
+        put_string("Invalid magic number:");
+        print_hex_string(magic);
+        put_char('\n');
+        return;
+    }
+
+    /* Set MBI to the address of the Multiboot information structure. */
+    mbi = (multiboot_info_t *) addr;
+
+    // TODO: a list of condition check
+
+    // init data
+    multiboot_memory_map_t *mmap;
+    multiboot_uint64_t memory_size = 0;
+    xpos = 0;
+    ypos = 0;
+
+    // traverse the memory map
+    for (mmap = (multiboot_memory_map_t *) mbi->mmap_addr; 
+          (unsigned long) mmap < mbi->mmap_addr + mbi->mmap_length; 
+            mmap = (multiboot_memory_map_t *) ((unsigned long) mmap + mmap->size + sizeof(mmap->size))) {       
+        // 64 bits base address, 64 bits length and 32 bits type.
+        // add up free memory
+        if (mmap->type == 1) {
+            memory_size += mmap->len;   // the size of the memory region in bytes
+        }
+        print_memory_range(mmap->addr, mmap->len, mmap->type);
+    }
+
+    print_memory_size(memory_size);
 }
 
-// print string on (x, y)
-void printStr(char* str) {
-    int size = strlen(str);
-    for (int i = 0; i < size; i++) {
-      // background color
-      unit_16 color = (0 << 4) | (15 & 0x0F);
-      // position
-      unit_16* position = (unit_16*)0xB8000 + (y * 80 + x);
-      x++;
-      *position = str[i] | (color<<8);
-    }
-}
+/* Clear the screen and initialize VIDEO, XPOS and YPOS. */
+static void cls (void) {
+    int i;
 
-// convert int to decimal string or hex string
-void toString(char* str, unit_32 data, unit_32 unit) {
-	if(data == 0) {
-		str[0] = '0';
-		str[1] = '\0';
-		return;	
-	}
-	
-  // convert each digit reversally
-	static char revstr[32];
-	int index = 0;
-	while(data != 0) {
-		unit_32 temp = data % unit;
-		data = data / unit;
-		if(unit == 10) {
-      revstr[index] = temp + '0';
-    }
-    else {
-      if(temp < 10) {
-        revstr[index] = temp + '0';
-      }
-      else {
-        revstr[index] = (temp - 10) + 'a'; 
-      }
-    }
-    index++;
-	}
-	
-  // reverse the string and put '\0' at the end
-	int i;
-	for(i = 0 ; i < index ; i++) {
-		str[i] = revstr[index - i - 1];
-	}
-	str[index] = '\0';
-	return;
-}
-
-void init(multiboot_info_t* pmb) {
-  // init data
-  memory_map_t *mmap;
-  unit_32 memsz = 0;
-  static char memstr[10];
-  unit_32 tmp0 = 0;
-  static char tmp[1000];
-
-  // init column and row
-	x=0;
-	y=4;
-
-  // traverse the memory map
-  for (mmap = (memory_map_t *) pmb->mmap_addr; (unsigned long) mmap < pmb->mmap_addr + pmb->mmap_length; mmap = (memory_map_t *) ((unsigned long) mmap + mmap->size + 4)) {   
-
-    // add into memory size if it's available
-    if (mmap->type == 1) {
-      memsz += mmap->length_low;
-    }
-	
-    // print the memory address map entry
-    // // base address
-		printStr("Address Range[");
-    tmp0 = 0;
-		tmp0 += mmap->base_addr_low;
-		toString(tmp, tmp0,16);
-		printStr(tmp);
-	
-    // // end address = base address + length
-    printStr(":");
-    unit_32 endAddr = mmap->base_addr_low + mmap->length_low;
-    toString(memstr, endAddr,16);
-    printStr(memstr);
-
-    // // state
-    printStr("] State: ");
-    if( mmap->type == 1 ) {
-      printStr("available");
-    }
-    else if( mmap->type ==2 ){
-      printStr("reserved");
-    }
-    else {
-      printStr("Others");
+    video = (unsigned char *) VIDEO;
+    
+    for (i = 0; i < COLUMNS * LINES * 2; i++) {
+        *(video + i) = 0;
     }
     
-    // row increase, set column to 0
-    y++;
-		x=0;
-  }
+    xpos = 0;
+    ypos = 0;
+}
 
-  // convert memory size in B to MB
-  memsz = (memsz >> 20) + 1;
+void print_memory_size(multiboot_uint64_t memory_size) {
+    // convert memory size in B to MB
+    memory_size = memory_size >> 20;
+    put_string("MemOS 2: Welcome *** System memory is (in MB): ");
+    print_hex_string(memory_size);
+    put_char('\n');
+}
 
-  // print memory size
-  toString(memstr, memsz,10);
-  y=2;
-  x=0;
+void print_memory_range(multiboot_uint64_t base_addr, multiboot_uint64_t len, multiboot_uint32_t type) {
+    put_string("Address range: [");
+    print_hex_string(base_addr);
+    put_char('~');
+    print_hex_string(base_addr + len);
+    put_string("] -> ");
+    if( type == 1 ) {
+        put_string("Free memory (1)\n");
+    }
+    else if( type == 2 ) {
+        put_string("Reserved memory (2)\n");
+    }
+    else {
+        put_string("Others\n");
+    }
+}
 
-  printStr("MemOS 2: Welcome *** System memory is: ");
-  printStr(memstr);
-  printStr("MB");
+void print_hex_string(multiboot_uint64_t data) {
+    char hex_str[19];
+    hex_str[0] = '0';
+    hex_str[1] = 'x';
+    hex_str[18] = '\0';
+    multiboot_uint16_t index;
+    multiboot_uint64_t temp;
+    for( index = 17, temp = 0x0000000f; index > 1; index--, data = data >> 4 ) {
+        multiboot_uint64_t hex_number = data & temp;
+        if( hex_number > 9 ) {
+            hex_number += 87;   // convert a~f to 'a'~'f'
+        }
+        else {
+            hex_number += 48;
+        }
+        hex_str[index] = hex_number;
+    }
+    put_string(hex_str);
+}
+
+void put_char(char ch) {
+    if (ch == '\n' || ch == '\r') {
+        newline();
+        return;
+    }
+
+    *(video + (xpos + ypos * COLUMNS) * 2) = ch & 0xFF;       // ASCII
+    *(video + (xpos + ypos * COLUMNS) * 2 + 1) = ATTRIBUTE;   // set up color
+
+    xpos++;
+    if (xpos >= COLUMNS) {
+        newline();
+    }       
+}
+
+void newline(void) {
+    xpos = 0;
+    ypos++;
+    if (ypos >= LINES) {
+        ypos = 0;
+    }
+}
+
+void put_string(char* str) {
+    multiboot_uint16_t i;
+    for( i = 0; str[i] != '\0'; i++ ) {
+        put_char(str[i]);
+    }
 }
 
