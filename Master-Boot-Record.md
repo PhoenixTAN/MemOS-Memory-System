@@ -1,4 +1,5 @@
 # Master Boot Record (MBR)
+https://en.wikipedia.org/wiki/Master_boot_record
 
 ## Definition
 A special type of **boot sector** at the very beginning of partitioned computer mass storage devices.
