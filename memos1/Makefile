@@ -1,6 +1,6 @@
-disk1.img: memos1
-	# dd bs=1 if=memos1 of=memos1_bootstrap skip=4096 count=512
-	dd bs=1 if=memos1 of=disk1.img skip=4096 count=32760
+memos1_bootstrap: memos1
+	dd bs=1 if=memos1 of=disk1.img count=446 conv=notrunc
+	
 memos1: memos1.o memos1.ld
 	ld -T memos1.ld memos1.o -o memos1
 

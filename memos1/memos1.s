@@ -161,9 +161,9 @@ print_end:
 	# Constant string:
 	str_addr_range:	  		.ascii 		"Address range: ["
 	len_str_addr_range: 	.word 		. - str_addr_range
-	free_type: 	  			.ascii 		"] -> Free Memory (1)"
+	free_type: 	  			.ascii 		"] -> Free"
 	len_free_type: 	  		.word  		. - free_type
-	reserved_type: 	  		.ascii 		"] -> Reserved Memory (2)"
+	reserved_type: 	  		.ascii 		"] -> Reserved"
 	len_reserved_type: 		.word  		. - reserved_type
 # -----------------------------------------------------------------
 
