@@ -1,7 +1,7 @@
 /**
  * Author: Ziqi Tan, Jiaqian Sun
  * 
- * Reference: 
+ * Reference: https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
 */
 
 #include <multiboot.h>
@@ -66,7 +66,7 @@ void cmain(unsigned long magic, unsigned long addr) {
     xpos = 0;
     ypos = 0;
 
-    // traverse the memory map
+    // iterate the memory map
     for (mmap = (multiboot_memory_map_t *) mbi->mmap_addr; 
           (unsigned long) mmap < mbi->mmap_addr + mbi->mmap_length; 
             mmap = (multiboot_memory_map_t *) ((unsigned long) mmap + mmap->size + sizeof(mmap->size))) {       
