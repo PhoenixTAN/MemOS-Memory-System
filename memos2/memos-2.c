@@ -39,7 +39,7 @@ void put_char(char ch);
 void put_string(char* string);
 void newline(void);
 
-// void cmain(multiboot_info_t* pmb) {
+
 void cmain(unsigned long magic, unsigned long addr) {
     /* Clear the screen. */
     cls ();
@@ -48,7 +48,6 @@ void cmain(unsigned long magic, unsigned long addr) {
 
     /* Am I booted by a Multiboot-compliant boot loader? */
     if (magic != MULTIBOOT_BOOTLOADER_MAGIC) {
-        // printf ("Invalid magic number: 0x%x\n", (unsigned) magic);
         put_string("Invalid magic number:");
         print_hex_string(magic);
         put_char('\n');
