@@ -9,5 +9,5 @@ The purpose of memos1 is to probe the memory by using assembly MBR code in memos
 ![alt text](./image/memos1-demo.png)
 
 ## Memos2
-
+Use grub to probe physical memory in protected mode.
 ![alt text](./image/memos2-demo.png)
