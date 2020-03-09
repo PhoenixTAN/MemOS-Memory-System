@@ -27,7 +27,7 @@ boot_entry:
     movl $(stack+0x4000), %ESP
 
     /* Push the pointer to the Multiboot information structure. */
-    pushl %EBX
+    pushl   %EBX      // 
 
     /* Push the magic value. */
     pushl   %EAX
